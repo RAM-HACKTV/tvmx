@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ZONA TV</title>
+
+  <style>
+    /* ===== RESET Y VARIABLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0b0b0e;
+      --bg-secondary: #14141a;
+      --bg-card: #1a1a24;
+      --border-color: #2a2a36;
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a0b8;
+      --accent: #f5b342;
+      --accent-hover: #e6a130;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+      --radius: 12px;
+      --transition: 0.25s ease;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    /* ===== SCROLLBAR PERSONALIZADA ===== */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-hover);
+    }
+
+    /* ===== LAYOUT PRINCIPAL (FLEX) ===== */
+    #app {
+      display: flex;
+      gap: 16px;
+      height: 100vh;
+      padding: 16px;
+      background: radial-gradient(circle at 20% 30%, #181820, #0a0a0e);
+      overflow: hidden;
+    }
+
+    /* ===== COLUMNA DEL REPRODUCTOR ===== */
+    #player-column {
+      flex: 2.2;
+      min-width: 0;
+      height: 100%;
+      background: #000;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    #player {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ===== COLUMNA DE LA LISTA ===== */
+    #playlist-column {
+      flex: 1;
+      min-width: 240px;
+      height: 100%;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    /* ===== HEADER DE BÚSQUEDA ===== */
+    #playlist-search {
+      padding: 16px 18px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #searchBox {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 16px;
+      outline: none;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    #searchBox:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 179, 66, 0.2);
+    }
+    #searchBox::placeholder {
+      color: var(--text-secondary);
+    }
+
+    #clearSearch {
+      width: 46px;
+      height: 46px;
+      border: none;
+      border-radius: 8px;
+      background: var(--bg-card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      flex-shrink: 0;
+      border: 1px solid var(--border-color);
+    }
+    #clearSearch:hover {
+      background: #2a2a3a;
+      transform: scale(1.05);
+      border-color: var(--accent);
+    }
+    #clearSearch svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+
+    /* ===== ÁREA DE CANALES ===== */
+    #channelsScrollArea {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .channel-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 14px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: var(--transition);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: inherit;
+    }
+    .channel-btn:hover {
+      background: #222233;
+      border-color: #444466;
+      transform: translateX(4px);
+    }
+    .channel-btn.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, #2a2400, #1f1a00);
+      box-shadow: 0 0 20px rgba(245, 179, 66, 0.15);
+      font-weight: 600;
+    }
+    .channel-btn .indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+    .channel-btn.active .indicator {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+    .channel-btn .channel-number {
+      color: var(--text-secondary);
+      font-weight: 400;
+      font-size: 14px;
+      margin-left: auto;
+      opacity: 0.6;
+    }
+
+    /* ===== FOOTER ===== */
+    #playlist-footer {
+      padding: 14px 18px;
+      font-size: 14px;
+      text-align: center;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #playlist-footer .brand {
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    #playlist-footer .count {
+      background: var(--bg-card);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ================================================================
+       RESPONSIVE: PANTALLAS GRANDES Y LANDSCAPE EN TABLETS/MÓVILES
+    ================================================================ */
+
+    /* --- Pantallas grandes (≥1024px) y tablets en landscape (≥768px) --- */
+    @media (min-width: 1024px), (min-width: 768px) and (orientation: landscape) {
+      #app {
+        flex-direction: row;
+        gap: 16px;
+        padding: 16px;
+      }
+      #player-column {
+        flex: 2.2;
+        height: 100%;
+        border-radius: var(--radius);
+      }
+      #playlist-column {
+        flex: 1;
+        min-width: 260px;
+        height: 100%;
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
+      }
+    }
+
+    /* --- Móviles en horizontal (max-width: 767px y landscape) --- */
+    @media (max-width: 767px) and (orientation: landscape) {
+      #app {
+        flex-direction: row;
+        gap: 8px;
+        padding: 8px;
+        height: 100vh;
+      }
+      #player-column {
+        flex: 1.8;
+        height: 100%;
+        border-radius: 8px;
+        min-height: 0;
+      }
+      #playlist-column {
+        flex: 1;
+        min-width: 160px;
+        height: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
+      #playlist-search {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      #searchBox {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      #clearSearch {
+        width: 34px;
+        height: 34px;
+      }
+      #clearSearch svg {
+        width: 20px;
+        height: 20px;
+      }
+      .channel-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        gap: 8px;
+        border-radius: 6px;
+      }
+      .channel-btn .channel-number {
+        font-size: 11px;
+      }
+      #channelsScrollArea {
+        padding: 6px 8px 8px;
+        gap: 4px;
+      }
+      #playlist-footer {
+        padding: 6px 10px;
+        font-size: 11px;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      #playlist-footer .count {
+        font-size: 10px;
+        padding: 2px 8px;
+      }
+      .channel-btn .indicator {
+        width: 6px;
+        height: 6px;
+      }
+    }
+
+    /* --- Móviles vertical (por defecto) --- */
+    @media (max-width: 820px) and (orientation: portrait) {
+      #app {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+        height: 100vh;
+        background: var(--bg-primary);
+      }
+      #player-column {
+        flex: none;
+        width: 100%;
+        height: 35vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      #playlist-column {
+        flex: 1;
+        width: 100%;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        background: var(--bg-primary);
+      }
+      #playlist-search {
+        padding: 12px 14px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+      }
+      #channelsScrollArea {
+        padding: 10px 12px 12px;
+      }
+      .channel-btn {
+        padding: 12px 14px;
+        font-size: 15px;
+      }
+      #playlist-footer {
+        padding: 10px 14px;
+        font-size: 13px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 480px) and (orientation: portrait) {
+      #player-column {
+        height: 30vh;
+      }
+      #searchBox {
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      #clearSearch {
+        width: 40px;
+        height: 40px;
+      }
+      #clearSearch svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    /* ===== ANIMACIÓN DE CARGA ===== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .channel-btn {
+      animation: fadeInUp 0.3s ease forwards;
+    }
+    .channel-btn:nth-child(2) { animation-delay: 0.05s; }
+    .channel-btn:nth-child(3) { animation-delay: 0.10s; }
+    .channel-btn:nth-child(4) { animation-delay: 0.15s; }
+    .channel-btn:nth-child(5) { animation-delay: 0.20s; }
+    .channel-btn:nth-child(6) { animation-delay: 0.25s; }
+    .channel-btn:nth-child(7) { animation-delay: 0.30s; }
+  </style>
+
+  <!-- JW Player -->
+  <script src="https://ssl.p.jwpcdn.com/player/v/8.26.4/jwplayer.js"></script>
+  <script>
+    jwplayer.key = "XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo";
+  </script>
+
+
+
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- COLUMNA REPRODUCTOR -->
+    <div id="player-column">
+      <div id="player"></div>
+    </div>
+
+    <!-- COLUMNA LISTA -->
+    <div id="playlist-column">
+
+      <!-- Buscador -->
+      <div id="playlist-search">
+        <input type="text" id="searchBox" placeholder="🔍 Buscar canal..." autocomplete="off" />
+        <button id="clearSearch" title="Limpiar búsqueda">
+          <!-- ESCUBA A COLORES (SVG) -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="2" width="4" height="10" fill="#8B6914" rx="1"></rect>
+            <path d="M6 12 L18 12 L20 20 L4 20 Z" fill="#F5B342"></path>
+            <line x1="8" y1="12" x2="7" y2="20" stroke="#C67C2E" stroke-width="1.2"></line>
+            <line x1="10" y1="12" x2="10" y2="20" stroke="#C67C2E" stroke-width="1.2"></line>
+            <line x1="12" y1="12" x2="12" y2="20" stroke="#C67C2E" stroke-width="1.2"></line>
+            <line x1="14" y1="12" x2="14" y2="20" stroke="#C67C2E" stroke-width="1.2"></line>
+            <line x1="16" y1="12" x2="17" y2="20" stroke="#C67C2E" stroke-width="1.2"></line>
+            <circle cx="12" cy="15" r="1.5" fill="rgba(255,255,255,0.2)"></circle>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lista de canales -->
+      <div id="channelsScrollArea"></div>
+
+      <!-- Footer -->
+      <div id="playlist-footer">
+        <span class="brand">✦ ZONA TV</span>
+        <span class="count" id="channelCount">0 canales</span>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       CANALES (con DRM)
+    ============================================================ */
+    const channels = [
+      
+	  
+	{
+        title: 'STAR CHANNEL MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(start_channel)/variant.mpd',
+        keyId: '6de957e2c8090588b2cc3b4cfe0470f4',
+        key: '52d97d7f43b204d2379b43ee7d3a2a21'
+      },
+      {
+        title: 'HBO HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(HBO_HD_MX)/manifest.mpd',
+        keyId: '24c2a4df8e8ddd176661ca6e0d61b26b',
+        key: 'b1b13889f71a96902c28582302163a5c'
+      },
+      {
+        title: 'HBO 2 HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(HBO2_HD_MX)/manifest.mpd',
+        keyId: '2d23487b5b881e44ba0fab9759fd85a3',
+        key: '029c7f128993034adfe4bc4e95140424'
+      },
+	  
+	  
+	  
+	  	    {
+        title: 'HBO MUNDI HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(HBO_MUNDI_HD_MX)/manifest.mpd',
+        keyId: 'cd8fa23065ddbf1347d05a878e38fd92',
+        key: 'f9005dcd2dfa946f619a674f05d2ca78'
+      
+	  },
+	  
+	  	  
+	  	  
+	  
+	  {
+        title: 'HBO POP HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(HBO_POP_HD_MX)/manifest.mpd',
+        keyId: '394335099a6f0e6f43904d8d2dc5a23f',
+        key: 'b14ce2f638444b14e1ef80da70a1b7be'
+      
+	  },
+	  
+	  	  
+	  
+	{
+        title: 'HBO XTREME HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(HBO_XTREME_HD_MX)/manifest.mpd',
+        keyId: '3dd59c1c936581818262914ac4d5a228',
+        key: '7db7545c6191b3db77d79c4d85465e48'
+      
+	  },
+	  
+	  
+	  {
+        title: 'HBO FAMILY HD MX',
+        mpd: 'https://live1-ott.izzigo.tv/15/out/u/dash/HBO-FAMILY-HD/default.mpd',
+        keyId: '3b1b15c86e64344e8802b06b806957c5',
+        key: '114983add26911b589595d931b505ca5'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  
+	   {
+        title: 'UNIVERSAL PREMIER HD MX',
+        mpd: 'https://otte.live.fly.ww.aiv-cdn.net/iad-nitro/live/dash-sd/enc/xerdmaskki/out/v1/787fdc37902c41eda2fb8a3098dbd50d/cenc-sd.mpd',
+        keyId: '79368a1a8de04576303bd1750e43ab63',
+        key: 'ff356a80dd60bac9dba49e141160fd03'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'UNIVERSAL CINEMA HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(UNIVERSAL_CINEMA_HD)/manifest.mpd',
+        keyId: '66ee81febe768875ae2fee5b8f512e15',
+        key: '54882694734874f280259fb8b6766ab3'
+      
+	  },
+	  
+	  	  
+	  
+	  {
+        title: 'UNIVERSAL COMEDY HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(UNIVERSAL_COMEDY_HD)/manifest.mpd',
+        keyId: '9a778fbd54a4b2285cea8d44c514a2fd',
+        key: 'd9befb259f2523d17dd5f7ae5ba2dd74'
+      
+	  },
+	  
+	  
+	  
+	  {
+        title: 'UNIVERSAL CRIME HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(UNIVERSAL_CRIME_HD)/manifest.mpd',
+        keyId: 'dd87aca2d338122cbd283bdd3a0f7502',
+        key: '2bd42314bdcf4028eeb25fcf61b7b6e3'
+      
+	  },
+	  
+	  
+	  
+	  {
+        title: 'UNIVERSAL CHANNEL HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(UNIVERSAL_CHANNEL_HD)/manifest.mpd',
+        keyId: '96388f9c9cbc73d4256a97974f9a2aef',
+        key: 'c2cd19c2e73c8b7d6c384ba745161444'
+      
+	  },
+	  
+	  
+	  
+	  {
+        title: 'UNIVERSAL REALITY HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(UNIVERSAL_REALITY_HD)/manifest.mpd',
+        keyId: 'aeced86dd6c5ecf4f39cd193109f39f7',
+        key: 'afcb5b67f584f2eeb1783474644a9f8e'
+      
+	  },
+	  
+	  
+	  
+	  {
+        title: 'CINEMAX HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(cinemax)/variant.mpd',
+        keyId: '540b2a870d04b8b73d18788ad6519c2c',
+        key: '4badcf5feda55f3a727430d78f0ede84'
+      
+	  },
+	  
+	  
+	  
+	  
+	  {
+        title: 'SPACE HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(space)/variant.mpd',
+        keyId: 'e6441ec9b4f7ddfbc4cac8801f4df9df',
+        key: '676229a75fdbc1a6b5f4a50c383490d9'
+      
+	  },
+	  
+	  
+	  
+	  
+	   {
+        title: 'FX HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(FX_HD)/manifest.mpd',
+        keyId: '6e677eed3dca4b51667c738addbcb25a',
+        key: 'a864316b124f1b866b7ca74246d1e590'
+      
+	  },
+	  
+	  
+	  
+	  
+	  {
+        title: 'AXN HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(axnhd)/variant.mpd',
+        keyId: '7a100e0455dec1d27ea68eac2444a057',
+        key: '518d58d1998e35f07ae8aa7a7716613a'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'A&E HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(aehd)/variant.mpd',
+        keyId: '5009add9e5b2cd627ac6ef8aa6db9123',
+        key: '3448834b1b496ed26e9727983c080844'
+      
+	  },
+	  
+	  
+	  
+	  
+	   {
+        title: 'AMC HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(amc)/variant.mpd',
+        keyId: '6772d26ccb1dee07b3b8703520286e8e',
+        key: 'e3836e151d5ff729fe237f29605f039b'
+      
+	  },
+	  
+	  
+	  
+	  
+	  {
+        title: 'CINECANAL HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(cinecanal)/variant.mpd',
+        keyId: 'b5575c4cac7dd0aba98835c5b59a0c62',
+        key: '48cb36a63c1526132d4f969a10d6eec3'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'SONY HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(sony)/variant.mpd',
+        keyId: '896f730715176bb90484f8385512cba7',
+        key: '7372951666a6653c2dbff9f2646c1c5d'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'STUDIO UNIVERSAL HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(studio_universal)/variant.mpd',
+        keyId: 'ff583851013fa7fb7abeaa8d0e762a41',
+        key: 'ad289e896926729a4e7559bdaa04e537'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'TNT HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(tnt)/variant.mpd',
+        keyId: '4139b9f4b9b13b81c2d1b53acd01e5e5',
+        key: '24f771215b927cd0961be8ab963bb8d2'
+      
+	  },
+	  
+	  
+	  
+	  
+	  {
+        title: 'TNT SERIES HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(tntseries)/variant.mpd',
+        keyId: 'af697afe95d1a333a845aee5ba676946',
+        key: 'c57bdecf3169b78e51865403c6e723bd'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'TCM HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(TCM)/manifest.mpd',
+        keyId: '4792d51840d3d92b2cbba3b06764f9cc',
+        key: '190ec74a991582088d72c66972f07f60'
+      
+	  },
+	  
+	  
+	  
+	  
+	  
+	  {
+        title: 'PARAMOUNT CHANNEL HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(Paramount)/variant.mpd',
+        keyId: '32b13be3cd4a6b293a8f1e8d69ba03cb',
+        key: '83451d1709e2ff8ab5db1ac05e78f577'
+      
+	  },
+	  
+	  
+	  
+	  
+	  	  {
+        title: 'CINE LATINO HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(b4540d49-0e51-9219-ced1-8624e83e6bf3)/manifest.mpd',
+        keyId: 'e28ec76b3e800ded41db58719ad8b8f4',
+        key: '4e40f2c54234fc211f471ed049b22649'
+      
+	  },
+	  
+	  
+	  	  
+	  
+	  
+	  {
+        title: 'DE PELICULA PLUS HD MX',
+        mpd: 'https://live1-ott.izzigo.tv/12/out/u/dash/DE-PELICULA-SD/default.mpd',
+        keyId: '208012d154bf5128dc04433c22e00698',
+        key: 'd17913671a71821ed7e4c4937cd2fba5'
+      
+	  },
+	  
+	  	  
+	
+	  
+	  	  	  	  	  	  	  	 	  	  	 
+     {
+        title: 'DISCOVERY CHANNEL HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoverychannelhd)/variant.mpd',
+        keyId: '8aba4faf1f6acb51cbde42de8c7add3d',
+        key: 'c78da1bf648851714612ec36a187ab7a'
+      
+	  },
+	  
+
+
+
+      {
+        title: 'DISCOVERY H&H HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoveryhomeandhealthhd)/manifest.mpd',
+        keyId: '42e70e74d2d731b7053caaa0a2621ca2',
+        key: '1c77ee4a9bf25791b0f1b11c7118f39e'
+      
+	  },
+	  
+
+
+      {
+        title: 'DISCOVERY ID HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(investigationdiscoveryhd)/manifest.mpd',
+        keyId: 'efe8aa76c0e7c3aeefed0966453b5baf',
+        key: 'fbccf5bf2a03a2cef118f92210fb75bd'
+      
+	  },
+	  
+
+
+      {
+        title: 'DISCOVERY TLC HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(tlchd)/variant.mpd',
+        keyId: '6254689477110d794617a8b8da688570',
+        key: 'a1126eaea3add2df3e27f3da40911ae2'
+      
+	  },
+     
+	 
+	 
+	 
+	 {
+        title: 'DISCOVERY TEATHER HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoverytheater)/variant.mpd',
+        keyId: '9bcc29a1959da552b2c4fa6c458d16b6',
+        key: '5ffc4bd5b909d996a0a699a51010bc15'
+      
+	  },
+	 
+	 
+	   
+	   {
+        title: 'DISCOVERY WORLD HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoveryworld)/variant.mpd',
+        keyId: '741059a27c32fa19c425e427b5e47850',
+        key: 'bb76a0393556deba90fa068bc7e1feec'
+      
+	  },
+	   
+	 
+	 
+	 
+	 {
+        title: 'DISCOVERY SCIENCE HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoveryscience)/variant.mpd',
+        keyId: '0cec7cd831b2de693a63d539fe01a02b',
+        key: '133a898ef1e97e0e59f3a8064f797d90'
+      
+	  },
+	 
+	 
+	 
+	 {
+        title: 'DISCOVERY TURBO HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(discoveryturbohd)/variant.mpd',
+        keyId: 'db8878cba41b2ee282b624fb75977b26',
+        key: 'f3e8cdd2586046c0cf087bbe6012ce97'
+      
+	  },
+	 
+	 
+	
+	 
+	 
+	 {
+        title: 'ANIMAL PLANET HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(animalplanethd)/variant.mpd',
+        keyId: '283ebc0dcc0ad5220cc9476fb2bd9b38',
+        key: '6c5120bd84de6233793e0ec556612e6d'
+      
+	  },
+	 
+	 
+	 
+	 
+	 {
+        title: 'HISTORY HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(history)/variant.mpd',
+        keyId: 'c60825bef7f79a30696e835532e2c1e5',
+        key: '9917be8378ddcb8ff4aa26c554da639e'
+      
+	  },
+	  
+	  
+	  	  	  	  	  
+	  
+	  
+      {
+        title: 'NATGEO HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(national_geographic)/variant.mpd',
+        keyId: '14747c7e082ba58e7391e3712578ee0a',
+        key: '4bcbff3d553e8a8b755a19bb4e93208a'
+      },
+	  
+	  
+	  
+      {
+        title: 'HGTV HD MX',
+        mpd: 'https://mxlivechannelsvosdash.clarovideo.com/Content/DASH_DASH_FK/Live/Channel(DISCOVERY_CIVILIZATION)/manifest.mpd',
+        keyId: '5a5626f776dc6a88d136abe4a261e287',
+        key: '4a78f8488b381ab57241f7d13b2d4324'
+      },
+	  
+	  
+	 
+	  
+	  
+	  
+	  {
+        title: 'ESPN 1 HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(espn)/manifest.mpd',
+        keyId: '8d1be59dc758ccbab3b567343d5d2915',
+        key: '4744fd0e2fb5aaae961f468925ac2b73'
+      },
+	  
+	  
+	  
+	  
+	  {
+        title: 'ESPN 2 HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(espn_2)/manifest.mpd',
+        keyId: 'ae99daa35220336fe9460b9060fa65a9',
+        key: 'ac284e8e24296f30496d1f39a7138205'
+      },
+	  
+	  
+	  
+	  
+	  {
+        title: 'ESPN 3 HD MX',
+        mpd: 'https://dish.akamaized.net/Content/DASH/Live/channel(espn_3)/manifest.mpd',
+        keyId: '430f38110162f19a042b4dcdc2005140',
+        key: '50541179fbd5750aea8767cb6e6b3a7b'
+      },  
+	  
+	  
+  
+	  
+	  
+    ];
+
+    /* ============================================================
+       REPRODUCTOR JW
+    ============================================================ */
+    const player = jwplayer('player');
+
+    function buildSource(ch) {
+      return {
+        file: ch.mpd,
+        type: 'dash',
+        drm: {
+          clearkey: {
+            keyId: ch.keyId,
+            key: ch.key
+          }
+        }
+      };
+    }
+
+    // Cargar el primer canal al inicio
+    const firstChannel = channels[0];
+    player.setup({
+      playlist: [{
+        title: firstChannel.title,
+        sources: [buildSource(firstChannel)]
+      }],
+      advertising: {
+        client: 'vast',
+        schedule: {
+          preroll: {
+            offset: 'pre',
+            tag: ' ' // Espacio en blanco → sin anuncio real
+          }
+        }
+      },
+      width: '100%',
+      height: '100%',
+      autostart: true,
+      controls: true,
+      mute: false,
+      repeat: false
+    });
+
+    /* ============================================================
+       LISTA DE CANALES Y BÚSQUEDA
+    ============================================================ */
+    const scrollArea = document.getElementById('channelsScrollArea');
+    const searchBox = document.getElementById('searchBox');
+    const clearBtn = document.getElementById('clearSearch');
+    const countSpan = document.getElementById('channelCount');
+
+    let activeIndex = 0;
+
+    function createChannelButton(ch, index) {
+      const btn = document.createElement('button');
+      btn.className = 'channel-btn';
+      btn.dataset.index = index;
+
+      const dot = document.createElement('span');
+      dot.className = 'indicator';
+      btn.appendChild(dot);
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = ch.title;
+      btn.appendChild(nameSpan);
+
+      const numSpan = document.createElement('span');
+      numSpan.className = 'channel-number';
+      numSpan.textContent = `#${index + 1}`;
+      btn.appendChild(numSpan);
+
+      btn.addEventListener('click', () => {
+        setActiveChannel(index);
+        loadChannel(index);
+      });
+
+      return btn;
+    }
+
+    function renderList() {
+      const query = searchBox.value.toLowerCase().trim();
+      scrollArea.innerHTML = '';
+
+      let visibleCount = 0;
+      channels.forEach((ch, i) => {
+        if (ch.title.toLowerCase().includes(query)) {
+          const btn = createChannelButton(ch, i);
+          scrollArea.appendChild(btn);
+          visibleCount++;
+        }
+      });
+
+      countSpan.textContent = `${visibleCount} canales`;
+
+      if (activeIndex >= 0 && activeIndex < channels.length) {
+        const allBtns = scrollArea.querySelectorAll('.channel-btn');
+        allBtns.forEach(btn => {
+          if (parseInt(btn.dataset.index) === activeIndex) {
+            btn.classList.add('active');
+          }
+        });
+      }
+    }
+
+    function setActiveChannel(index) {
+      activeIndex = index;
+      const allBtns = scrollArea.querySelectorAll('.channel-btn');
+      allBtns.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.index) === index);
+      });
+    }
+
+    function loadChannel(index) {
+      if (index < 0 || index >= channels.length) return;
+      const ch = channels[index];
+      player.load([{
+        title: ch.title,
+        sources: [buildSource(ch)]
+      }]);
+      setTimeout(() => player.play(), 300);
+      setActiveChannel(index);
+    }
+
+    searchBox.addEventListener('input', renderList);
+    clearBtn.addEventListener('click', () => {
+      searchBox.value = '';
+      renderList();
+      searchBox.focus();
+    });
+
+    renderList();
+    setActiveChannel(0);
+
+    player.on('error', (e) => {
+      console.warn('Error en el reproductor:', e);
+    });
+
+    console.log('✅ ZONA TV');
+  </script>
+
+  
+  
+</body>
+</html>
